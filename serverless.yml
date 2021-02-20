@@ -15,7 +15,7 @@ service: serverless-bitbot
 
 # app and org for use with dashboard.serverless.com
 app: bitcampdev
-org: bitprojectorg
+org: btiprojectorg
 
 frameworkVersion: "2"
 useDotenv: true
