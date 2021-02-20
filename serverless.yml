@@ -28,6 +28,7 @@ provider:
     APP_ID: ${param:APP_ID}
     PRIVATE_KEY: ${param:PRIVATE_KEY}
     WEBHOOK_SECRET: ${param:WEBHOOK_SECRET}
+    NEW_RELIC_LICENSE_KEY: ${param:NEW_RELIC_LICENSE_KEY}
     NODE_ENV: production
     LOG_LEVEL: debug
 
