@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "This Github App creates BitLabs and guides students through courses.",
+  "main": "app.js",
   "author": "Bit Project <info@bitproject.org>",
   "license": "ISC",
   "homepage": "https://github.com/bitprj/camp.dev",
@@ -12,11 +13,12 @@
     "probot-app"
   ],
   "scripts": {
-    "start": "probot run ./index.js",
-    "test": "jest"
+    "start": "probot run ./app.js",
+    "test": "node test.js"
   },
   "dependencies": {
     "@octokit/core": "^3.2.5",
+    "@probot/adapter-aws-lambda-serverless": "^2.0.0",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "js-yaml": "^4.0.0",
