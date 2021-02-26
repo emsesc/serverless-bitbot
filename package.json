@@ -17,12 +17,13 @@
     "test": "node test.js"
   },
   "dependencies": {
+    "@apollo/client": "^3.3.11",
     "@octokit/core": "^3.2.5",
     "@probot/adapter-aws-lambda-serverless": "^2.0.0",
-    "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
+    "graphql": "^15.5.0",
     "js-yaml": "^4.0.0",
     "newrelic": "^7.1.1",
+    "node-fetch": "^2.6.1",
     "probot": "^11.0.5",
     "ruby": "^0.6.1"
   },

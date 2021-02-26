@@ -16,7 +16,7 @@ var respond = false;
 tracker[key] = []
 
 const functions = require('./helpers');
-
+const api = require('./graphql.js');
 
 module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
@@ -33,10 +33,25 @@ module.exports = (app) => {
   }
 
 
-  if (start == ".bit") {
+  if (start == ".bit" && context.payload.commits[0].added[0] != ".bit/.progress") {
     // Record data in newrelic
     const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url }
     newrelic.recordCustomEvent("CabinGithub", attributes)
+
+    var gqlrequest = `
+    mutation startCourse {
+      insert_course_analytics(
+        objects: {
+          repo: "${context.payload.repository.html_url}", 
+          user: "${context.payload.repository.owner.login}"
+      }) {
+        returning {
+          id
+        }
+      }
+    }
+    `
+    console.log(await api.queryData(gqlrequest))
 
     app.log.info("Templated created...")
     app.log.info("Attempting to get YAML")
@@ -122,8 +137,27 @@ module.exports = (app) => {
      } catch (e) {
        var issueLink = context.payload.pull_request.html_url
      }
-     const attributes = { type: 'Completed Step', user: user, repo: repoLink, title: configyml.steps[count].title, path: `.bit/responses/${configyml.steps[count].actions[0].with}`, link: issueLink}
+     var path = `.bit/responses/${configyml.steps[count].actions[0].with}`
+     const attributes = { type: 'Completed Step', user: user, repo: repoLink, title: configyml.steps[count].title, path: path, link: issueLink}
      newrelic.recordCustomEvent("CabinGithub", attributes)
+     var gqlrequest = `
+     mutation insertProgress {
+      insert_users_progress(
+        objects: {
+          link: "${issueLink}", 
+          path: "${path}", 
+          repo: "${repoLink}", 
+          title: "${configyml.steps[count].title}", 
+          user: "${user}"
+        }
+      ) {
+        returning {
+          id
+        }
+      }
+    }
+    `
+    console.log(await api.queryData(gqlrequest))
 
     app.log.info("Count before: " + count)
     app.log.info(configyml.steps[count].event, context.payload.pull_request)
