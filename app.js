@@ -138,7 +138,7 @@ module.exports = (app) => {
        var issueLink = context.payload.pull_request.html_url
      }
      var path = `.bit/responses/${configyml.steps[count].actions[0].with}`
-     const attributes = { type: 'Completed Step', user: user, repo: repoLink, title: configyml.steps[count].title, path: path, link: issueLink}
+     const attributes = { type: 'Completed Step', user: user, repo: repoLink, title: configyml.steps[count+1].title, path: path, link: issueLink}
      newrelic.recordCustomEvent("CabinGithub", attributes)
      var gqlrequest = `
      mutation insertProgress {
