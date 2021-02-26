@@ -56,12 +56,14 @@ module.exports = (app) => {
     app.log.info("Templated created...")
     app.log.info("Attempting to get YAML")
     var configyml = await functions.yamlFile(context)
+
+    var path = `.bit/responses/${configyml.before[0].body}`
     
     // start lab by executing what is in the before portion of config.yml
     let response = await context.octokit.repos.getContent({
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
-      path:`.bit/responses/${configyml.before[0].body}`,
+      path: path,
     });
 
     // Creating the .progress file that contains date and step
@@ -69,6 +71,26 @@ module.exports = (app) => {
       stepTitle: configyml.steps[0].title,
       time: context.payload.commits[0].timestamp
     }
+
+
+    var gqlrequest = `
+    mutation insertProgress {
+     insert_users_progress(
+       objects: {
+         path: "${path}", 
+         repo: "${context.payload.repository.html_url}", 
+         title: "${configyml.steps[0].title}", 
+         user: "${context.payload.repository.owner.login}"
+       }
+     ) {
+       returning {
+         id
+       }
+     }
+   }
+   `
+   console.log(await api.queryData(gqlrequest))
+
     tracker[key].push(data);
 
       try {
