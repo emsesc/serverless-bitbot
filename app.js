@@ -147,7 +147,7 @@ module.exports = (app) => {
           link: "${issueLink}", 
           path: "${path}", 
           repo: "${repoLink}", 
-          title: "${configyml.steps[count].title}", 
+          title: "${configyml.steps[count+1].title}", 
           user: "${user}"
         }
       ) {
