@@ -6,7 +6,7 @@ const findStep = async (context) => {
 
     gqlrequest = `
     query getCount {
-        users_progress(where: {repoName: {_eq: "${params.repo}"}, user: {_eq: "${params.owner}"}}, order_by: {startTime: asc}) {
+        users_progress(where: {repoName: {_eq: "${params.repo}"}, user: {_eq: "${params.owner}"}}, order_by: {startTime: desc}) {
           count
         }
       }      

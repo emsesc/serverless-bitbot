@@ -26,18 +26,18 @@ module.exports = (app) => {
  });
 
  app.on('pull_request.closed', async (context) => {
-  master(context);
+  main(context);
  });
 
  app.on('issue_comment.created', async (context) => {
-  master(context);
+  main(context);
  });
  app.on('workflow_run', async (context) => {
-  master(context);
+  main(context);
  });
 };
 
-async function master(context) {
+async function main(context) {
   let configData = await data.yamlFile(context);
   let currentStep = await data.findStep(context);
   console.log(currentStep)
