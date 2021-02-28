@@ -1,4 +1,30 @@
+const gql = require('./graphql.js');
 const yaml = require('js-yaml');
+
+const findStep = async (context) => {
+    const params = context.issue() 
+
+    gqlrequest = `
+    query getCount {
+        users_progress(where: {repoName: {_eq: "${params.repo}"}, user: {_eq: "${params.owner}"}}, order_by: {startTime: asc}) {
+          count
+        }
+      }      
+    `
+    // output:
+    // {
+    //     "data": {
+    //       "users_progress": [
+    //         {
+    //           "count": 3
+    //         }
+    //       ]
+    //     }
+    //   }
+    let result = await gql.queryData(gqlrequest)
+    count = result.data.users_progress[0].count
+    return count
+}
 
 const yamlFile = async (context) => {
     try {
@@ -35,3 +61,4 @@ const getFileContent = async (context, content) => {
 
 exports.yamlFile = yamlFile
 exports.getFileContent = getFileContent
+exports.findStep = findStep
