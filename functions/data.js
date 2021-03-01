@@ -1,6 +1,18 @@
 const gql = require('./graphql.js');
 const yaml = require('js-yaml');
 
+const typeStep = async (currentStep, configyml, eventTrigger) => {
+    const step = configyml.steps[currentStep]
+    var stepType = step.stepType;
+    var files = step.actions[0].files
+    var scripts = step.actions[0].scripts
+    var event = configyml.steps[currentStep].event
+    if (event != eventTrigger) {
+        process.exit()
+    }
+    return [stepType, files, scripts]
+}
+
 const findStep = async (context) => {
     const params = context.issue() 
 
@@ -62,3 +74,4 @@ const getFileContent = async (context, content) => {
 exports.yamlFile = yamlFile
 exports.getFileContent = getFileContent
 exports.findStep = findStep
+exports.typeStep = typeStep

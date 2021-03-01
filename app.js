@@ -26,22 +26,31 @@ module.exports = (app) => {
  });
 
  app.on('pull_request.closed', async (context) => {
-  main(context);
+  console.log("Pull request")
+  main(context, 'pull_request.closed');
  });
 
  app.on('issue_comment.created', async (context) => {
-  main(context);
+  console.log("Issue comment created")
+  if (context.payload.sender.login != "bitcampdev[bot]") {
+    main(context, 'issue_comment.created');
+  }
  });
- app.on('workflow_run', async (context) => {
-  main(context);
+
+ app.on('workflow_run.completed', async (context) => {
+   console.log("Workflow run")
+   console.log(context.payload.workflow_run.name)
+   if (context.payload.workflow_run.name != "Syncing Your Cabin") {
+      main(context, 'workflow_run.completed');
+   }
  });
 };
 
-async function main(context) {
+async function main(context, event) {
   let configData = await data.yamlFile(context);
   let currentStep = await data.findStep(context);
-  console.log(currentStep)
-  // let typeOfStep = data.typeStep(currentStep, configData);
+  let typeOfStep = data.typeStep(currentStep, configData, event);
+  console.log(typeOfStep)
   // let moveOn = data.workEvaluation(typeOfStep);
   // steps.nextStep(context, currentStep, moveOn);
 }
