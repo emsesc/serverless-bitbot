@@ -48,9 +48,14 @@ module.exports = (app) => {
 
 async function main(context, event) {
   let configData = await data.yamlFile(context);
+  console.log("Got configyml!")
   let currentStep = await data.findStep(context);
+  console.log("Getting current step!")
   let typeOfStep = data.typeStep(currentStep, configData, event);
-  console.log(typeOfStep)
-  // let moveOn = data.workEvaluation(typeOfStep);
-  // steps.nextStep(context, currentStep, moveOn);
+  console.log("The type: " + typeOfStep)
+  let moveOn = steps.workEvaluation(typeOfStep, context, configData);
+  console.log("Successfully evaluated" + moveOn)
+  console.log("Next Step function executing")
+  console.log("Context: " + context)
+  steps.nextStep(moveOn, currentStep, context, configData);
 }

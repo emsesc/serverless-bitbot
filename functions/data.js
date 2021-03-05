@@ -1,6 +1,19 @@
 const gql = require('./graphql.js');
 const yaml = require('js-yaml');
 
+const issueNo = async (context) => {
+  context = JSON.parse(context)
+  console.log(context)
+  const payload = context.issue({
+    state: "open",
+  })
+
+  let res = await context.octokit.issues.listForRepo(payload)
+  console.log(res)
+  
+  return res.data[0].number
+}
+
 const typeStep = async (currentStep, configyml, eventTrigger) => {
     const step = configyml.steps[currentStep]
     var stepType = step.stepType;
@@ -75,3 +88,4 @@ exports.yamlFile = yamlFile
 exports.getFileContent = getFileContent
 exports.findStep = findStep
 exports.typeStep = typeStep
+exports.issueNo = issueNo
