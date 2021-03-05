@@ -40,7 +40,7 @@ module.exports = (app) => {
  app.on('workflow_run.completed', async (context) => {
    console.log("Workflow run")
    console.log(context.payload.workflow_run.name)
-   if (context.payload.workflow_run.name != "Syncing Your Cabin") {
+   if (context.payload.workflow_run.name != "Syncing Your Cabin" && context.payload.workflow_run.name != "Track progress" && context.payload.workflow_run.name != "Update progress") {
       main(context, 'workflow_run.completed');
    }
  });
@@ -49,13 +49,21 @@ module.exports = (app) => {
 async function main(context, event) {
   let configData = await data.yamlFile(context);
   console.log("Got configyml!")
+
   let currentStep = await data.findStep(context);
   console.log("Getting current step!")
-  let typeOfStep = data.typeStep(currentStep, configData, event);
+
+  console.log(currentStep, configData, event)
+  let typeOfStep = await data.typeStep(currentStep, configData, event);
   console.log("The type: " + typeOfStep)
-  let moveOn = steps.workEvaluation(typeOfStep, context, configData);
-  console.log("Successfully evaluated" + moveOn)
+
+  let moveOn = await steps.workEvaluation(typeOfStep, context, configData);
+  console.log("moveOn: " + moveOn)
+
+  console.log("Successfully evaluated")
   console.log("Next Step function executing")
-  console.log("Context: " + context)
-  steps.nextStep(moveOn, currentStep, context, configData);
+  let issueNo = await data.issueNo(context)
+  let countfile = await data.getFileContent(context, ".bit/.progress")
+
+  await steps.nextStep(moveOn, currentStep, context, configData, issueNo, countfile);
 }

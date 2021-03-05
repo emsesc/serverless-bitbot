@@ -4,17 +4,18 @@ const checks = async (context) => {
     let success = false;
 
     if (context.payload.workflow_run.conclusion != "failure") {
+      console.log("Success!")
         success = true;
     }
 
-    return [success, reslink, repolink, context.issue.user, context.issue.repo]
+    return [success, reslink, repolink, context.issue().owner, context.issue().repo]
 }
 
 const IssueComment = async (context) => {
     let repolink = context.payload.repository.html_url
     let reslink = context.payload.issue.html_url;
     let success = true;
-    return [success, reslink, repolink, context.issue.user, context.issue.repo]
+    return [success, reslink, repolink, context.issue().owner, context.issue().repo]
 }
 
 const PRmerge = async (context, configyml) => {
@@ -41,10 +42,16 @@ const PRmerge = async (context, configyml) => {
     }
 
     if (test2Array.length == testArray.length) {
+      console.log("Success!")
         success = true
     } else {
+      console.log("Fail")
         success = false
     }
 
-    return [success, reslink, repolink, context.issue.user, context.issue.repo]
+    return [success, reslink, repolink, context.issue().owner, context.issue().repo]
 }
+
+exports.checks = checks
+exports.IssueComment = IssueComment
+exports.PRmerge = PRmerge

@@ -2,14 +2,11 @@ const gql = require('./graphql.js');
 const yaml = require('js-yaml');
 
 const issueNo = async (context) => {
-  context = JSON.parse(context)
-  console.log(context)
   const payload = context.issue({
     state: "open",
   })
 
   let res = await context.octokit.issues.listForRepo(payload)
-  console.log(res)
   
   return res.data[0].number
 }
@@ -17,9 +14,16 @@ const issueNo = async (context) => {
 const typeStep = async (currentStep, configyml, eventTrigger) => {
     const step = configyml.steps[currentStep]
     var stepType = step.stepType;
-    var files = step.actions[0].files
-    var scripts = step.actions[0].scripts
     var event = configyml.steps[currentStep].event
+
+    try {
+      var files = step.actions[0].files
+      var scripts = step.actions[0].scripts
+    } catch (e) {
+      var files = "None"
+      var scripts = "None"
+    }
+
     if (event != eventTrigger) {
         process.exit()
     }

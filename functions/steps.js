@@ -2,15 +2,13 @@ const data = require('./data.js');
 const gql = require('./graphql.js');
 const eval = require('./eval.js')
 
-const nextStep = async(moveOn, count, context, configyml) => {
-  console.log(JSON.stringify(context))
-  const issueno = data.issueNo(JSON.stringify(context))
+const nextStep = async (moveOn, count, context, configyml, issueno, countfile) => {
+
   // update count, update hasura and local file
   if (moveOn[0] == true) {
     for (y = 0; y < configyml.steps[count].actions.length; y++) {
       var array = configyml.steps[count].actions[y]
-      app.log.info(array)
-     
+     console.log("Responding")
      // Executes an action based on the step in the YAML
       if (array.type == "respond") {
         const response = await data.getFileContent(context, `.bit/responses/${array.with}`)
@@ -19,20 +17,19 @@ const nextStep = async(moveOn, count, context, configyml) => {
           issue_number: issueno,
         });
         context.octokit.issues.createComment(issueComment)
-        app.log.info("Respond")
-        add = 1
       }
+
       if (array.type == "createIssue") {
         const response = await data.getFileContent(context, `.bit/responses/${array.body}`)
         const issueBody = context.issue({
           title: array.title,
           body: response[1],
         });
-        app.log.info("createIssue")
+
         context.octokit.issues.create(issueBody)
-        prcount += 1
       } 
-      if (array.type == "closeIssue" && configyml.steps[count].event == "issue_comment.created") {
+
+      if (array.type == "closeIssue") {
         const payload = context.issue({
           state: "closed",
           issue_number: issueno,
@@ -43,12 +40,14 @@ const nextStep = async(moveOn, count, context, configyml) => {
     }
   }
 
+  console.log("Incrementing count")
+  console.log(count)
   count += 1
-  var countfile = await data.getFileContent(context, ".bit/.camp")
+  console.log(count)
   const update = context.issue({
-    path: ".bit/.camp",
+    path: ".bit/.progress",
     message: "Update progress",
-    content: Buffer.from(count).toString('base64'),
+    content: Buffer.from(count.toString()).toString('base64'),
     sha: countfile[0].data.sha,
     committer: {
       name: `bitcampdev`,
@@ -59,7 +58,9 @@ const nextStep = async(moveOn, count, context, configyml) => {
       email: "info@bitproject.org",
     },
   });
-  context.octokit.repos.createOrUpdateFileContents(update)
+  console.log("Attempting to update...")
+  await context.octokit.repos.createOrUpdateFileContents(update)
+  console.log("Successfully updated!")
 
   var path = `.bit/responses/${configyml.steps[count-1].actions[0].with}`
   var gqlrequest = `
@@ -70,7 +71,9 @@ const nextStep = async(moveOn, count, context, configyml) => {
        path: "${path}", 
        repo: "${moveOn[2]}", 
        title: "${configyml.steps[count].title}", 
-       user: "${moveOn[3]}"
+       user: "${moveOn[3]}",
+       count: ${count},
+       repoName: "${moveOn[4]}",
      }
    ) {
      returning {
@@ -84,12 +87,15 @@ const nextStep = async(moveOn, count, context, configyml) => {
 
 const workEvaluation = async (typeOfStep, context, configyml) => {
   var res = []
-  if (typeOfStep == "checks") {
-    res = eval.checks(context)
-  } else if (typeOfStep == "IssueComment") {
-    res = eval.IssueComment(context)
-  } else if (typeOfStep == "PRmerge") {
-    res = eval.PRmerge(context, configyml)
+  if (typeOfStep[0] == "checks") {
+    console.log("Checking checks")
+    res = await eval.checks(context)
+  } else if (typeOfStep[0] == "IssueComment") {
+    console.log("Checking comment")
+    res = await eval.IssueComment(context)
+  } else if (typeOfStep[0] == "PRmerge") {
+    console.log("Checking PR")
+    res = await eval.PRmerge(context, configyml)
   }
   return res
 }
