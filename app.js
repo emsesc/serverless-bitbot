@@ -17,7 +17,7 @@ module.exports = (app) => {
     start = ""
   }
 
-  if (start == ".bit") {
+  if (start == ".bit" && context.payload.commits[0].added[0] != ".bit/.progress") {
     let configData = await data.yamlFile(context);
     console.log("Deleting file...")
     await steps.deleteFile(context);
