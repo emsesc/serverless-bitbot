@@ -3,7 +3,7 @@ const gql = require('./graphql.js');
 const eval = require('./eval.js')
 
 const nextStep = async (moveOn, count, context, configyml, issueno, countfile) => {
-
+  var weekno = ""
   // update count, update hasura and local file
   if (moveOn[0] == true) {
     for (y = 0; y < configyml.steps[count].actions.length; y++) {
@@ -11,22 +11,28 @@ const nextStep = async (moveOn, count, context, configyml, issueno, countfile) =
      console.log("Responding")
      // Executes an action based on the step in the YAML
       if (array.type == "respond") {
-        const response = await data.getFileContent(context, `.bit/responses/${array.with}`)
+        let responseFile = array.with
+        const response = await data.getFileContent(context, `.bit/responses/${responseFile}`)
         const issueComment = context.issue({
           body: response[1],
           issue_number: issueno,
         });
         context.octokit.issues.createComment(issueComment)
+        weekno = responseFile.charAt(0)
+        console.log(weekno)
       }
 
       if (array.type == "createIssue") {
-        const response = await data.getFileContent(context, `.bit/responses/${array.body}`)
+        let responseFile = array.body
+        const response = await data.getFileContent(context, `.bit/responses/${responseFile}`)
         const issueBody = context.issue({
           title: array.title,
           body: response[1],
         });
 
         context.octokit.issues.create(issueBody)
+        weekno = responseFile.charAt(0)
+        console.log(weekno)
       } 
 
       if (array.type == "closeIssue") {
@@ -38,51 +44,53 @@ const nextStep = async (moveOn, count, context, configyml, issueno, countfile) =
         context.octokit.issues.update(payload)
       }
     }
-  }
-
-  console.log("Incrementing count")
-  console.log(count)
-  count += 1
-  console.log(count)
-  const update = context.issue({
-    path: ".bit/.progress",
-    message: "Update progress",
-    content: Buffer.from(count.toString()).toString('base64'),
-    sha: countfile[0].data.sha,
-    committer: {
-      name: `bitcampdev`,
-      email: "info@bitproject.org",
-    },
-    author: {
-      name: `bitcampdev`,
-      email: "info@bitproject.org",
-    },
-  });
-  console.log("Attempting to update...")
-  await context.octokit.repos.createOrUpdateFileContents(update)
-  console.log("Successfully updated!")
-
-  var path = `.bit/responses/${configyml.steps[count-1].actions[0].with}`
-  var gqlrequest = `
-  mutation insertProgress {
-   insert_users_progress(
-     objects: {
-       link: "${moveOn[1]}", 
-       path: "${path}", 
-       repo: "${moveOn[2]}", 
-       title: "${configyml.steps[count].title}", 
-       user: "${moveOn[3]}",
-       count: ${count},
-       repoName: "${moveOn[4]}",
-     }
-   ) {
-     returning {
-       id
+    console.log(weekno)
+    console.log("Incrementing count")
+    console.log(count)
+    count += 1
+    console.log(count)
+    const update = context.issue({
+      path: ".bit/.progress",
+      message: "Update progress",
+      content: Buffer.from(count.toString()).toString('base64'),
+      // countfile must request the specific week branch
+      sha: countfile[0].data.sha,
+      branch: `week${weekno}`,
+      committer: {
+        name: `bitcampdev`,
+        email: "info@bitproject.org",
+      },
+      author: {
+        name: `bitcampdev`,
+        email: "info@bitproject.org",
+      },
+    });
+    console.log("Attempting to update...")
+    await context.octokit.repos.createOrUpdateFileContents(update)
+    console.log("Successfully updated!")
+  
+    var path = `.bit/responses/${configyml.steps[count-1].actions[0].with}`
+    var gqlrequest = `
+    mutation insertProgress {
+     insert_users_progress(
+       objects: {
+         link: "${moveOn[1]}", 
+         path: "${path}", 
+         repo: "${moveOn[2]}", 
+         title: "${configyml.steps[count].title}", 
+         user: "${moveOn[3]}",
+         count: ${count},
+         repoName: "${moveOn[4]}",
+       }
+     ) {
+       returning {
+         id
+       }
      }
    }
- }
- `
- console.log(await gql.queryData(gqlrequest))
+   `
+   console.log(await gql.queryData(gqlrequest))
+  }
 }
 
 const workEvaluation = async (typeOfStep, context, configyml) => {
@@ -176,6 +184,45 @@ const startLab = async (context, configyml) => {
     })
 }
 
+const workFlow = async (context) => {
+  console.log("Getting files")
+  let files = await context.octokit.repos.getContent({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    path: ".bit/workflows"
+  });
+
+  for (i = 0; i < files.data.length; i++) {
+    console.log(i)
+    let body = await data.getFileContent(context, `.bit/workflows/${files.data[i].name}`)
+    body = body[0].data.content
+    console.log(body)
+    console.log(files.data[i].name)
+    console.log(i)
+    try {
+      await context.octokit.repos.createOrUpdateFileContents({
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        path: `.github/workflows/${files.data[i].name}`,
+        message: "Start workflows",
+        content: body,
+        committer: {
+          name: `bitcampdev`,
+          email: "info@bitproject.org",
+        },
+        author: {
+          name: `bitcampdev`,
+          email: "info@bitproject.org",
+        },
+      })
+    } catch (e) {
+      console.log(e)
+    }
+
+  }
+}
+
 exports.startLab = startLab
 exports.workEvaluation = workEvaluation
 exports.nextStep = nextStep
+exports.workFlow = workFlow

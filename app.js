@@ -22,6 +22,8 @@ module.exports = (app) => {
   if (start == ".bit") {
     let configData = await data.yamlFile(context);
     steps.startLab(context, configData);
+    console.log("Committing workflow files")
+    steps.workFlow(context);
   }
  });
 
