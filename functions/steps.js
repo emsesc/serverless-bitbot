@@ -2,6 +2,17 @@ const data = require('./data.js');
 const gql = require('./graphql.js');
 const eval = require('./eval.js')
 
+const deleteFile = async (context) => {
+  let file = await data.getFileContent(context, ".github/workflows/main.yml");
+  await context.octokit.repos.deleteFile({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    path: ".github/workflows/main.yml",
+    message: "Delete workflow",
+    sha: file[0].data.sha,
+  });
+}
+
 const nextStep = async (moveOn, count, context, configyml, issueno, countfile) => {
   var weekno = ""
   // update count, update hasura and local file
@@ -226,3 +237,4 @@ exports.startLab = startLab
 exports.workEvaluation = workEvaluation
 exports.nextStep = nextStep
 exports.workFlow = workFlow
+exports.deleteFile = deleteFile
