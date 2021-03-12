@@ -63,7 +63,7 @@ const yamlFile = async (context) => {
           path:".bit/config.yml",
     });
     } catch (e) {
-        console.log(e)
+        process.exit()
         return
     }
 
