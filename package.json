@@ -22,7 +22,6 @@
     "@probot/adapter-aws-lambda-serverless": "^2.0.0",
     "graphql": "^15.5.0",
     "js-yaml": "^4.0.0",
-    "newrelic": "^7.1.1",
     "node-fetch": "^2.6.1",
     "probot": "^11.0.5",
     "ruby": "^0.6.1"
