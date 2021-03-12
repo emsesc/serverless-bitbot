@@ -1,4 +1,4 @@
-# camp.dev
+# Serverless BitBot
 
 > A GitHub App built with [Probot](https://github.com/probot/probot) that This Github App creates BitLabs and guides students through courses.&#x27;
 
