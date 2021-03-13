@@ -262,15 +262,11 @@ const workFlow = async (context) => {
     path: ".bit/workflows"
   });
 
-  console.log("Got files!")
-  console.log(files)
+
   for (i = 0; i < files.data.length; i++) {
-    console.log(i)
     let body = await data.getFileContent(context, `.bit/workflows/${files.data[i].name}`)
     body = body[0].data.content
-    console.log(body)
-    console.log(files.data[i].name)
-    console.log(i)
+
     try {
       await context.octokit.repos.createOrUpdateFileContents({
         owner: context.payload.repository.owner.login,
