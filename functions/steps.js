@@ -262,6 +262,8 @@ const workFlow = async (context) => {
     path: ".bit/workflows"
   });
 
+  console.log("Got files!")
+  console.log(files)
   for (i = 0; i < files.data.length; i++) {
     console.log(i)
     let body = await data.getFileContent(context, `.bit/workflows/${files.data[i].name}`)
