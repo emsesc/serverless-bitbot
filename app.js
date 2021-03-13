@@ -65,7 +65,9 @@ async function main(context, event) {
   console.log("Successfully evaluated")
   console.log("Next Step function executing")
   let issueNo = await data.issueNo(context)
-  let countfile = await data.getFileContent(context, ".bit/.progress")
 
-  await steps.nextStep(moveOn, currentStep, context, configData, issueNo, countfile);
+  if (moveOn[0] == true) {
+    let weekno = await steps.nextStep(currentStep, context, configData, issueNo);
+    await steps.updateFiles(moveOn, count, configyml, weekno, context)
+  }
 }
