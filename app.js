@@ -11,6 +11,7 @@ var start;
 module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
+  console.log("Push event")
   try {
     start = context.payload.commits[0].added[0].substring(0,4)
   } catch (e) {
