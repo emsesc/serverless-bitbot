@@ -2,6 +2,35 @@ const data = require('./data.js');
 const gql = require('./graphql.js');
 const eval = require('./eval.js')
 
+const newBranch = async (context, branch, count) => {
+  const responseBody = context.issue({
+    path: ".bit/.progress",
+    ref: branch
+  });
+  countfile = await context.octokit.repos.getContent(responseBody);
+  console.log(countfile)
+
+  const update = context.issue({
+    path: ".bit/.progress",
+    message: "Update progress",
+    content: Buffer.from(count.toString()).toString('base64'),
+    // countfile must request the specific week branch
+    sha: countfile.data.sha,
+    branch: branch,
+    committer: {
+      name: `bitcampdev`,
+      email: "info@bitproject.org",
+    },
+    author: {
+      name: `bitcampdev`,
+      email: "info@bitproject.org",
+    },
+  });
+  console.log("Attempting to update...")
+  await context.octokit.repos.createOrUpdateFileContents(update)
+  console.log("Successfully updated!")  
+}
+
 const deleteFile = async (context) => {
   try {
     let file = await data.getFileContent(context, ".github/workflows/main.yml");
@@ -24,33 +53,37 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
   count += 1
   console.log(count)
 
-  // const responseBody = context.issue({
-  //   path: ".bit/.progress",
-  //   branch: `week${weekno}`
-  // });
-  // countfile = await context.octokit.repos.getContent(responseBody);
-  // console.log(countfile)
-  console.log(weekno)
-
-  const update = context.issue({
-    path: ".bit/.progress",
-    message: "Update progress",
-    content: Buffer.from(count.toString()).toString('base64'),
-    // countfile must request the specific week branch
-    sha: `week${weekno}`,
-    branch: `week${weekno}`,
-    committer: {
-      name: `bitcampdev`,
-      email: "info@bitproject.org",
-    },
-    author: {
-      name: `bitcampdev`,
-      email: "info@bitproject.org",
-    },
-  });
-  console.log("Attempting to update...")
-  await context.octokit.repos.createOrUpdateFileContents(update)
-  console.log("Successfully updated!")
+  try {
+    const responseBody = context.issue({
+      path: ".bit/.progress",
+      ref: `week${weekno}`
+    });
+    countfile = await context.octokit.repos.getContent(responseBody);
+    console.log(countfile)
+    console.log(weekno)
+  
+    const update = context.issue({
+      path: ".bit/.progress",
+      message: "Update progress",
+      content: Buffer.from(count.toString()).toString('base64'),
+      // countfile must request the specific week branch
+      sha: countfile.data.sha,
+      branch: `week${weekno}`,
+      committer: {
+        name: `bitcampdev`,
+        email: "info@bitproject.org",
+      },
+      author: {
+        name: `bitcampdev`,
+        email: "info@bitproject.org",
+      },
+    });
+    console.log("Attempting to update...")
+    await context.octokit.repos.createOrUpdateFileContents(update)
+    console.log("Successfully updated!")  
+  } catch (e) {
+    console.log("End of week")
+  }
 
   var path = `.bit/responses/${configyml.steps[count-1].actions[0].with}`
   var gqlrequest = `
@@ -81,8 +114,11 @@ const nextStep = async (count, context, configyml, issueno) => {
   for (y = 0; y < configyml.steps[count].actions.length; y++) {
     var array = configyml.steps[count].actions[y]
     console.log("Responding")
+    console.log(y)
+    console.log(configyml.steps[count].actions.length)
     // Executes an action based on the step in the YAML
     if (array.type == "respond") {
+      console.log("Creating comment...")
       let responseFile = array.with
       const response = await data.getFileContent(context, `.bit/responses/${responseFile}`)
       const issueComment = context.issue({
@@ -91,10 +127,16 @@ const nextStep = async (count, context, configyml, issueno) => {
       });
       context.octokit.issues.createComment(issueComment)
       weekno = responseFile.charAt(0)
+
+      if (isNaN(weekno)) {
+        weekno = configyml.steps[count-1].actions[y].with.charAt(0)
+      }
+
       console.log(weekno)
     }
 
     if (array.type == "createIssue") {
+      console.log("Creating issue...")
       let responseFile = array.body
       const response = await data.getFileContent(context, `.bit/responses/${responseFile}`)
       const issueBody = context.issue({
@@ -108,6 +150,7 @@ const nextStep = async (count, context, configyml, issueno) => {
     } 
 
     if (array.type == "closeIssue") {
+      console.log("Closing issue...")
       const payload = context.issue({
         state: "closed",
         issue_number: issueno,
@@ -255,3 +298,4 @@ exports.nextStep = nextStep
 exports.workFlow = workFlow
 exports.deleteFile = deleteFile
 exports.updateFiles = updateFiles
+exports.newBranch = newBranch

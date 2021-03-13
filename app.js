@@ -46,6 +46,11 @@ module.exports = (app) => {
       main(context, 'workflow_run.completed');
    }
  });
+
+ app.on('create', async (context) => {
+  console.log("Branch created")
+  main(context, 'create')
+});
 };
 
 async function main(context, event) {
@@ -55,19 +60,23 @@ async function main(context, event) {
   let currentStep = await data.findStep(context);
   console.log("Getting current step!")
 
-  console.log(currentStep, configData, event)
-  let typeOfStep = await data.typeStep(currentStep, configData, event);
-  console.log("The type: " + typeOfStep)
-
-  let moveOn = await steps.workEvaluation(typeOfStep, context, configData);
-  console.log("moveOn: " + moveOn)
-
-  console.log("Successfully evaluated")
-  console.log("Next Step function executing")
-  let issueNo = await data.issueNo(context)
-
-  if (moveOn[0] == true) {
-    let weekno = await steps.nextStep(currentStep, context, configData, issueNo);
-    await steps.updateFiles(moveOn, count, configyml, weekno, context)
+  if (event == 'create') {
+    await steps.newBranch(context, context.payload.ref, currentStep)
+  } else {
+    console.log(currentStep, configData, event)
+    let typeOfStep = await data.typeStep(currentStep, configData, event);
+    console.log("The type: " + typeOfStep)
+  
+    let moveOn = await steps.workEvaluation(typeOfStep, context, configData);
+    console.log("moveOn: " + moveOn)
+  
+    console.log("Successfully evaluated")
+    console.log("Next Step function executing")
+    let issueNo = await data.issueNo(context)
+  
+    if (moveOn[0] == true) {
+      let weekno = await steps.nextStep(currentStep, context, configData, issueNo);
+      await steps.updateFiles(moveOn, count, configyml, weekno, context)
+    }
   }
 }
