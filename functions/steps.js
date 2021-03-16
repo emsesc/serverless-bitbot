@@ -45,6 +45,13 @@ const deleteFile = async (context) => {
     console.log("Error: had trouble deleting workflow")
   }
 
+  let response = { 
+    statusCode: 200, 
+    headers: { "x-custom-header" : "deleteFile" }, 
+    body: JSON.stringify("Successfully deleted workflow.") 
+  }; 
+  console.log("response: " + JSON.stringify(response)) 
+  return response;
 }
 
 const updateFiles = async (moveOn, count, configyml, weekno, context) => {
@@ -246,12 +253,21 @@ const startLab = async (context, configyml) => {
     });
 
     response = Buffer.from(response.data.content, 'base64').toString()
-    return await context.octokit.issues.create({
+    
+    let body = await context.octokit.issues.create({
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
       title: configyml.before[0].title,
       body: response,
     })
+
+    let res = { 
+      statusCode: 200, 
+      headers: { "x-custom-header" : "startLab" }, 
+      body: JSON.stringify(body) 
+    }; 
+    console.log("response: " + JSON.stringify(response)) 
+    return res;
 }
 
 const workFlow = async (context) => {
