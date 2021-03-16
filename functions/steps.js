@@ -266,7 +266,7 @@ const startLab = async (context, configyml) => {
       headers: { "x-custom-header" : "startLab" }, 
       body: JSON.stringify(body) 
     }; 
-    console.log("response: " + JSON.stringify(response)) 
+    console.log("response: " + JSON.stringify(res)) 
     return res;
 }
 
