@@ -45,13 +45,6 @@ const deleteFile = async (context) => {
     console.log("Error: had trouble deleting workflow")
   }
 
-  let response = { 
-    statusCode: 200, 
-    headers: { "x-custom-header" : "deleteFile" }, 
-    body: JSON.stringify("Successfully deleted workflow.") 
-  }; 
-  console.log("response: " + JSON.stringify(response)) 
-  return response;
 }
 
 const updateFiles = async (moveOn, count, configyml, weekno, context) => {
@@ -218,29 +211,36 @@ const startLab = async (context, configyml) => {
           },
         })
       } catch (e) {
-        return
+        console.log(e)
       }
     
-    var path = `.bit/responses/${configyml.before[0].body}`
-    var gqlrequest = `
-    mutation insertProgress {
-        insert_users_progress(
-        objects: {
-            path: "${path}", 
-            repo: "${context.payload.repository.html_url}", 
-            title: "${configyml.steps[0].title}", 
-            user: "${context.payload.repository.owner.login}",
-            count: 0,
-            repoName: "${context.payload.repository.name}"
-        }
-        ) {
-        returning {
-            id
-        }
-        }
+    console.log("Tracked the progress...")
+    try {
+      var path = `.bit/responses/${configyml.before[0].body}`
+      var gqlrequest = `
+      mutation insertProgress {
+          insert_users_progress(
+          objects: {
+              path: "${path}", 
+              repo: "${context.payload.repository.html_url}", 
+              title: "${configyml.steps[0].title}", 
+              user: "${context.payload.repository.owner.login}",
+              count: 0,
+              repoName: "${context.payload.repository.name}"
+          }
+          ) {
+          returning {
+              id
+          }
+          }
+      }
+      `
+      let res = await gql.queryData(gqlrequest)
+      console.log(res)
+    } catch (e) {
+        console.log(e)
     }
-    `
-    console.log(await gql.queryData(gqlrequest))
+    
 
     console.log("Templated created...")
     console.log("Attempting to get YAML")
@@ -253,21 +253,12 @@ const startLab = async (context, configyml) => {
     });
 
     response = Buffer.from(response.data.content, 'base64').toString()
-    
-    let body = await context.octokit.issues.create({
+    return await context.octokit.issues.create({
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
       title: configyml.before[0].title,
       body: response,
     })
-
-    let res = { 
-      statusCode: 200, 
-      headers: { "x-custom-header" : "startLab" }, 
-      body: JSON.stringify(body) 
-    }; 
-    console.log("response: " + JSON.stringify(res)) 
-    return res;
 }
 
 const workFlow = async (context) => {

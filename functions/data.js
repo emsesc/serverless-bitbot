@@ -25,7 +25,7 @@ const typeStep = async (currentStep, configyml, eventTrigger) => {
     }
 
     if (event != eventTrigger) {
-      throw new Error('Incorrect event!');
+        process.exit()
     }
     return [stepType, files, scripts]
 }
@@ -63,7 +63,8 @@ const yamlFile = async (context) => {
           path:".bit/config.yml",
     });
     } catch (e) {
-      throw new Error('Incorrect repository!');
+        process.exit()
+        return
     }
 
     yamlfile = Buffer.from(yamlfile.data.content, 'base64').toString()
